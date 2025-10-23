@@ -14,66 +14,7 @@ The main objectives of the project are to analyze and visualize the data related
 - Sleep disorder analysis: Determine the presence of sleep disorders such as insomnia and sleep apnea.
 
 <br>
-<div align="center">
-<b style="font-size: 16px;">Dashboard Screenshots</b>
 
-<a href="https://public.tableau.com/app/profile/ramazan.erduran1816/viz/StressLevelHealth/Overview"><i>Click for interactive Tableau Dashboard</i></a>
-<div>
-<div class="image-grid">
-  <div class="image-item">
-    <a href="https://public.tableau.com/app/profile/ramazan.erduran1816/viz/StressLevelHealth/Overview">
-    <img src="./Imgs/Homepage.png" alt="Image 1">
-    </a>
-  </div>
-  <div class="image-item">
-    <a href="https://public.tableau.com/app/profile/ramazan.erduran1816/viz/StressLevelHealth/Overview">
-    <img src="./Imgs/Demography.png" alt="Image 2">
-    </a>
-  </div>
-  <div class="image-item">
-    <a href="https://public.tableau.com/app/profile/ramazan.erduran1816/viz/StressLevelHealth/Overview">
-    <img src="./Imgs/Health.png" alt="Image 3">
-    </a>
-  </div>
-  <div class="image-item">
-    <a href="https://public.tableau.com/app/profile/ramazan.erduran1816/viz/StressLevelHealth/Overview">
-    <img src="./Imgs/Lifestyle.png" alt="Image 4">
-    </a>
-  </div>
-</div>
-
-<br>
-
-<br>
-
-<div align="center">
-<b style="font-size: 16px;">Web Application Screenshots</b>
-
-<a href="https://sleep-health-ml-project.streamlit.app/"><i>Click for Web Application</i></a>
-<div>
-<div>
-<div class="image-grid">
-  <div class="image-item">
-    <a href="https://sleep-health-ml-project.streamlit.app/">
-    <img src="./Imgs/app_homePage.png" alt="Image 1">
-    </a>
-  </div>
-  <div class="image-item">
-    <a href="https://sleep-health-ml-project.streamlit.app/">
-    <img src="./Imgs/app_Dataset.png" alt="Image 2">
-    </a>
-  </div>
-  <div class="image-item">
-    <a href="https://sleep-health-ml-project.streamlit.app/">
-    <img src="./Imgs/app_Prediction.png" alt="Image 3">
-    </a>
-  </div>
-  <div class="image-item">
-    <a href="https://sleep-health-ml-project.streamlit.app/">
-    <img src="./Imgs/app_Contact.png" alt="Image 4">
-    </a>
-  </div>
-</div>
 
 ---
 
@@ -139,5 +80,5 @@ Also dashboards and web application can be used online
 <br>
 <br>
 <p align="right">
-<i>Kavinayaa B</i>
+<i>Ramazan ERDURAN</i>
 </p>
