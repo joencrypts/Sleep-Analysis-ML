@@ -23,20 +23,46 @@ st.set_page_config(
 # Configure Gemini AI
 def configure_gemini():
     """Configure Gemini AI with API key"""
-    api_key = st.secrets.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
-    if api_key and api_key != "your_gemini_api_key_here":
-        try:
+    try:
+        # Try to get API key from secrets
+        api_key = None
+        if hasattr(st, 'secrets') and 'GEMINI_API_KEY' in st.secrets:
+            api_key = st.secrets['GEMINI_API_KEY']
+        elif 'GEMINI_API_KEY' in os.environ:
+            api_key = os.environ['GEMINI_API_KEY']
+        
+        if api_key and api_key != "your_gemini_api_key_here" and len(api_key) > 10:
             genai.configure(api_key=api_key)
-            return genai.GenerativeModel('gemini-pro')
-        except Exception as e:
-            st.warning(f"⚠️ Gemini API configuration error: {str(e)[:100]}...")
+            model = genai.GenerativeModel('gemini-pro')
+            return model
+        else:
+            st.warning("⚠️ Gemini API key not found or invalid. Please set GEMINI_API_KEY in secrets or environment variables.")
             return None
-    else:
-        st.warning("⚠️ Gemini API key not found. Please set GEMINI_API_KEY in secrets or environment variables.")
+    except Exception as e:
+        st.warning(f"⚠️ Gemini API configuration error: {str(e)[:100]}...")
         return None
 
 # Initialize Gemini model
 gemini_model = configure_gemini()
+
+# Debug information (remove in production)
+if st.sidebar.checkbox("🔧 Debug API Configuration"):
+    st.sidebar.write("**API Key Status:**")
+    try:
+        if hasattr(st, 'secrets') and 'GEMINI_API_KEY' in st.secrets:
+            api_key = st.secrets['GEMINI_API_KEY']
+            st.sidebar.write(f"✅ Found in secrets: {api_key[:10]}...")
+        else:
+            st.sidebar.write("❌ Not found in secrets")
+        
+        if 'GEMINI_API_KEY' in os.environ:
+            st.sidebar.write(f"✅ Found in environment: {os.environ['GEMINI_API_KEY'][:10]}...")
+        else:
+            st.sidebar.write("❌ Not found in environment")
+            
+        st.sidebar.write(f"**Gemini Model Status:** {'✅ Configured' if gemini_model else '❌ Not configured'}")
+    except Exception as e:
+        st.sidebar.write(f"❌ Debug error: {e}")
 
 # Manual report generation function
 def generate_manual_report(data, stress_pred, sleep_score, health_score):
