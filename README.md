@@ -80,5 +80,5 @@ Also dashboards and web application can be used online
 <br>
 <br>
 <p align="right">
-<i>Ramazan ERDURAN</i>
+
 </p>
