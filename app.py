@@ -13,7 +13,7 @@ from datetime import datetime
 import json
 
 # Set API key immediately
-os.environ['GEMINI_API_KEY'] = "AIzaSyAoSfHDdMT8iiKw5aZeTO8xiuBXfxY0aMc"
+os.environ['GEMINI_API_KEY'] = "AIzaSyAV3cNfrwJnbuo0VPNGas_5hdAqOn3TYYs"
 
 # Configure page first - this must be the first Streamlit command
 st.set_page_config(
@@ -31,9 +31,23 @@ def configure_gemini():
         api_key = os.environ.get('GEMINI_API_KEY')
         
         if api_key and len(api_key) > 10:
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-pro')
-            return model
+            # Try the newer API syntax first
+            try:
+                from google import genai as google_genai
+                client = google_genai.Client()
+                return client
+            except ImportError:
+                # Fallback to older API
+                genai.configure(api_key=api_key)
+                # Try different model names (prioritize working ones)
+                model_names = ['gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-pro']
+                for model_name in model_names:
+                    try:
+                        model = genai.GenerativeModel(model_name)
+                        return model
+                    except Exception:
+                        continue
+                return None
         else:
             st.warning("⚠️ Gemini API key not found or invalid.")
             return None
@@ -535,8 +549,18 @@ elif selected == "📋 AI Report":
                             Format the response in clear sections with emojis and make it professional yet friendly.
                             """
                             
-                            response = gemini_model.generate_content(prompt)
-                            ai_report = response.text
+                            # Handle both new and old API syntax
+                            if hasattr(gemini_model, 'models'):
+                                # New API syntax
+                                response = gemini_model.models.generate_content(
+                                    model="gemini-2.5-flash",
+                                    contents=prompt
+                                )
+                                ai_report = response.text
+                            else:
+                                # Old API syntax
+                                response = gemini_model.generate_content(prompt)
+                                ai_report = response.text
                             
                             st.session_state.ai_report = ai_report
                             st.success("✅ AI report generated successfully!")
