@@ -24,15 +24,102 @@ st.set_page_config(
 def configure_gemini():
     """Configure Gemini AI with API key"""
     api_key = st.secrets.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
-    if api_key:
-        genai.configure(api_key=api_key)
-        return genai.GenerativeModel('gemini-pro')
+    if api_key and api_key != "your_gemini_api_key_here":
+        try:
+            genai.configure(api_key=api_key)
+            return genai.GenerativeModel('gemini-pro')
+        except Exception as e:
+            st.warning(f"⚠️ Gemini API configuration error: {str(e)[:100]}...")
+            return None
     else:
         st.warning("⚠️ Gemini API key not found. Please set GEMINI_API_KEY in secrets or environment variables.")
         return None
 
 # Initialize Gemini model
 gemini_model = configure_gemini()
+
+# Manual report generation function
+def generate_manual_report(data, stress_pred, sleep_score, health_score):
+    """Generate a comprehensive manual health report"""
+    
+    # Risk assessment
+    risk_level = "Low"
+    if stress_pred >= 7 or sleep_score <= 4 or health_score <= 5:
+        risk_level = "High"
+    elif stress_pred >= 5 or sleep_score <= 6 or health_score <= 7:
+        risk_level = "Medium"
+    
+    # Sleep analysis
+    sleep_duration = data['Sleep Duration']
+    sleep_quality = data['Quality of Sleep']
+    
+    if sleep_duration < 6:
+        sleep_duration_advice = "⚠️ Your sleep duration is below recommended levels (7-9 hours)."
+    elif sleep_duration > 9:
+        sleep_duration_advice = "⚠️ Your sleep duration is above normal levels."
+    else:
+        sleep_duration_advice = "✅ Your sleep duration is within healthy range."
+    
+    if sleep_quality <= 4:
+        sleep_quality_advice = "⚠️ Your sleep quality needs improvement."
+    elif sleep_quality >= 7:
+        sleep_quality_advice = "✅ You have good sleep quality."
+    else:
+        sleep_quality_advice = "📈 Your sleep quality is moderate with room for improvement."
+    
+    # Generate recommendations
+    recommendations = []
+    if data['Physical Activity Level'] < 30:
+        recommendations.append("🏃‍♂️ Increase physical activity to at least 30 minutes daily")
+    if data['Daily Steps'] < 6000:
+        recommendations.append("👟 Aim for 8,000+ daily steps")
+    if stress_pred >= 6:
+        recommendations.append("🧘‍♀️ Practice stress management techniques")
+    if sleep_duration < 7:
+        recommendations.append("🌙 Prioritize getting 7-8 hours of sleep")
+    if data['BMI Category'] in ['Overweight', 'Obese']:
+        recommendations.append("🥗 Focus on balanced nutrition and weight management")
+    
+    # Display manual report
+    st.markdown(f"""
+    <div class="report-section">
+        <h3>📊 Executive Summary</h3>
+        <p>Based on your health profile, you have a <strong>{risk_level.lower()}</strong> risk level for stress-related health issues. 
+        Your overall health score is <strong>{health_score:.1f}/10</strong>, indicating {'good' if health_score >= 7 else 'moderate' if health_score >= 5 else 'needs improvement'} health status.</p>
+        
+        <h3>🎯 Health Risk Assessment</h3>
+        <p><strong>Risk Level:</strong> {risk_level}</p>
+        <p><strong>Primary Concerns:</strong> {'High stress levels' if stress_pred >= 7 else 'Moderate stress' if stress_pred >= 5 else 'Low stress levels'}</p>
+        
+        <h3>🌙 Sleep Quality Analysis</h3>
+        <p><strong>Sleep Duration:</strong> {sleep_duration_advice}</p>
+        <p><strong>Sleep Quality:</strong> {sleep_quality_advice}</p>
+        <p><strong>Sleep Score:</strong> {sleep_score:.1f}/10</p>
+        
+        <h3>💡 Lifestyle Recommendations</h3>
+        <ul>
+            {''.join([f'<li>{rec}</li>' for rec in recommendations])}
+        </ul>
+        
+        <h3>🧘‍♀️ Stress Management Tips</h3>
+        <ul>
+            <li>Practice deep breathing exercises for 5-10 minutes daily</li>
+            <li>Engage in regular physical activity</li>
+            <li>Maintain a consistent sleep schedule</li>
+            <li>Consider mindfulness or meditation practices</li>
+            <li>Limit caffeine intake, especially in the afternoon</li>
+        </ul>
+        
+        <h3>🎯 Long-term Health Goals</h3>
+        <ul>
+            <li>Achieve and maintain 7-8 hours of quality sleep nightly</li>
+            <li>Reduce stress levels to below 5/10 through lifestyle changes</li>
+            <li>Increase daily physical activity to 60+ minutes</li>
+            <li>Maintain healthy blood pressure and heart rate</li>
+            <li>Develop sustainable stress management routines</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Custom CSS for better styling
 st.markdown("""
@@ -46,7 +133,7 @@ st.markdown("""
         margin-bottom: 2rem;
     }
     .metric-card {
-        background: #f8f9fa;
+        background: #00152b;
         padding: 1rem;
         border-radius: 8px;
         border-left: 4px solid #176397;
@@ -379,56 +466,78 @@ elif selected == "📋 AI Report":
             
         else:
             # Generate AI report
-            if st.button("🤖 Generate AI Health Report", use_container_width=True):
-                with st.spinner("🤖 Generating your personalized AI health report..."):
-                    try:
-                        data = st.session_state.prediction_data
-                        stress_pred = st.session_state.stress_prediction
-                        sleep_score = st.session_state.sleep_score
-                        health_score = st.session_state.health_score
-                        
-                        # Create prompt for Gemini
-                        prompt = f"""
-                        As a health AI specialist, analyze this sleep health data and provide a comprehensive, personalized health report:
-                        
-                        Patient Profile:
-                        - Age: {data['Age']} years
-                        - Gender: {data['Gender']}
-                        - Occupation: {data['Occupation']}
-                        - BMI Category: {data['BMI Category']}
-                        - Sleep Duration: {data['Sleep Duration']} hours
-                        - Sleep Quality: {data['Quality of Sleep']}/10
-                        - Physical Activity: {data['Physical Activity Level']} minutes/day
-                        - Daily Steps: {data['Daily Steps']:,}
-                        - Heart Rate: {data['Heart Rate']} bpm
-                        - Blood Pressure: {data['BP High']}/{data['BP Low']}
-                        - Sleep Disorder: {data['Sleep Disorder']}
-                        
-                        Predictions:
-                        - Predicted Stress Level: {stress_pred:.1f}/10
-                        - Sleep Quality Score: {sleep_score:.1f}/10
-                        - Overall Health Score: {health_score:.1f}/10
-                        
-                        Please provide:
-                        1. Executive Summary (2-3 sentences)
-                        2. Health Risk Assessment
-                        3. Sleep Quality Analysis
-                        4. Lifestyle Recommendations (5-7 specific, actionable items)
-                        5. Stress Management Tips
-                        6. Long-term Health Goals
-                        
-                        Format the response in clear sections with emojis and make it professional yet friendly.
-                        """
-                        
-                        response = gemini_model.generate_content(prompt)
-                        ai_report = response.text
-                        
-                        st.session_state.ai_report = ai_report
-                        
-                    except Exception as e:
-                        st.error(f"Error generating AI report: {e}")
-                        ai_report = "Unable to generate AI report at this time."
-                        st.session_state.ai_report = ai_report
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("🤖 Generate AI Health Report", use_container_width=True):
+                    with st.spinner("🤖 Generating your personalized AI health report..."):
+                        try:
+                            data = st.session_state.prediction_data
+                            stress_pred = st.session_state.stress_prediction
+                            sleep_score = st.session_state.sleep_score
+                            health_score = st.session_state.health_score
+                            
+                            # Create prompt for Gemini
+                            prompt = f"""
+                            As a health AI specialist, analyze this sleep health data and provide a comprehensive, personalized health report:
+                            
+                            Patient Profile:
+                            - Age: {data['Age']} years
+                            - Gender: {data['Gender']}
+                            - Occupation: {data['Occupation']}
+                            - BMI Category: {data['BMI Category']}
+                            - Sleep Duration: {data['Sleep Duration']} hours
+                            - Sleep Quality: {data['Quality of Sleep']}/10
+                            - Physical Activity: {data['Physical Activity Level']} minutes/day
+                            - Daily Steps: {data['Daily Steps']:,}
+                            - Heart Rate: {data['Heart Rate']} bpm
+                            - Blood Pressure: {data['BP High']}/{data['BP Low']}
+                            - Sleep Disorder: {data['Sleep Disorder']}
+                            
+                            Predictions:
+                            - Predicted Stress Level: {stress_pred:.1f}/10
+                            - Sleep Quality Score: {sleep_score:.1f}/10
+                            - Overall Health Score: {health_score:.1f}/10
+                            
+                            Please provide:
+                            1. Executive Summary (2-3 sentences)
+                            2. Health Risk Assessment
+                            3. Sleep Quality Analysis
+                            4. Lifestyle Recommendations (5-7 specific, actionable items)
+                            5. Stress Management Tips
+                            6. Long-term Health Goals
+                            
+                            Format the response in clear sections with emojis and make it professional yet friendly.
+                            """
+                            
+                            response = gemini_model.generate_content(prompt)
+                            ai_report = response.text
+                            
+                            st.session_state.ai_report = ai_report
+                            st.success("✅ AI report generated successfully!")
+                            
+                        except Exception as e:
+                            error_msg = str(e)
+                            if "429" in error_msg or "RATE_LIMIT_EXCEEDED" in error_msg:
+                                st.error("🚫 API rate limit exceeded. Please wait a minute and try again.")
+                                st.info("💡 **Rate Limit Solutions:**\n- Wait 1-2 minutes before trying again\n- Consider upgrading your Gemini API plan\n- Use the manual analysis below for now")
+                            elif "403" in error_msg or "PERMISSION_DENIED" in error_msg:
+                                st.error("🔒 API access denied. Please check your API key permissions.")
+                            elif "400" in error_msg or "INVALID_ARGUMENT" in error_msg:
+                                st.error("❌ Invalid request. Please try again with different data.")
+                            else:
+                                st.error(f"❌ Error generating AI report: {error_msg[:200]}...")
+                            
+                            # Generate fallback manual report
+                            st.markdown("### 📋 Manual Health Analysis (Fallback)")
+                            generate_manual_report(data, stress_pred, sleep_score, health_score)
+            
+            with col2:
+                if st.button("📋 Generate Manual Report", use_container_width=True):
+                    data = st.session_state.prediction_data
+                    stress_pred = st.session_state.stress_prediction
+                    sleep_score = st.session_state.sleep_score
+                    health_score = st.session_state.health_score
+                    generate_manual_report(data, stress_pred, sleep_score, health_score)
             
             # Display AI report
             if 'ai_report' in st.session_state:
