@@ -12,6 +12,14 @@ import os
 from datetime import datetime
 import json
 
+# Configure page first - this must be the first Streamlit command
+st.set_page_config(
+    page_title="Sleep Health AI Analysis",
+    page_icon="💤",
+    initial_sidebar_state="expanded",
+    layout="wide"
+)
+
 # Configure Gemini AI
 def configure_gemini():
     """Configure Gemini AI with API key"""
@@ -25,13 +33,6 @@ def configure_gemini():
 
 # Initialize Gemini model
 gemini_model = configure_gemini()
-
-st.set_page_config(
-    page_title="Sleep Health AI Analysis",
-    page_icon="💤",
-    initial_sidebar_state="expanded",
-    layout="wide"
-)
 
 # Custom CSS for better styling
 st.markdown("""
