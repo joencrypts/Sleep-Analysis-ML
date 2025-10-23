@@ -12,6 +12,9 @@ import os
 from datetime import datetime
 import json
 
+# Set API key immediately
+os.environ['GEMINI_API_KEY'] = "AIzaSyAoSfHDdMT8iiKw5aZeTO8xiuBXfxY0aMc"
+
 # Configure page first - this must be the first Streamlit command
 st.set_page_config(
     page_title="Sleep Health AI Analysis",
@@ -24,19 +27,15 @@ st.set_page_config(
 def configure_gemini():
     """Configure Gemini AI with API key"""
     try:
-        # Try to get API key from secrets
-        api_key = None
-        if hasattr(st, 'secrets') and 'GEMINI_API_KEY' in st.secrets:
-            api_key = st.secrets['GEMINI_API_KEY']
-        elif 'GEMINI_API_KEY' in os.environ:
-            api_key = os.environ['GEMINI_API_KEY']
+        # Get API key from environment (set at the top of the file)
+        api_key = os.environ.get('GEMINI_API_KEY')
         
-        if api_key and api_key != "your_gemini_api_key_here" and len(api_key) > 10:
+        if api_key and len(api_key) > 10:
             genai.configure(api_key=api_key)
             model = genai.GenerativeModel('gemini-pro')
             return model
         else:
-            st.warning("⚠️ Gemini API key not found or invalid. Please set GEMINI_API_KEY in secrets or environment variables.")
+            st.warning("⚠️ Gemini API key not found or invalid.")
             return None
     except Exception as e:
         st.warning(f"⚠️ Gemini API configuration error: {str(e)[:100]}...")
@@ -49,18 +48,19 @@ gemini_model = configure_gemini()
 if st.sidebar.checkbox("🔧 Debug API Configuration"):
     st.sidebar.write("**API Key Status:**")
     try:
-        if hasattr(st, 'secrets') and 'GEMINI_API_KEY' in st.secrets:
-            api_key = st.secrets['GEMINI_API_KEY']
-            st.sidebar.write(f"✅ Found in secrets: {api_key[:10]}...")
-        else:
-            st.sidebar.write("❌ Not found in secrets")
-        
-        if 'GEMINI_API_KEY' in os.environ:
-            st.sidebar.write(f"✅ Found in environment: {os.environ['GEMINI_API_KEY'][:10]}...")
+        api_key = os.environ.get('GEMINI_API_KEY')
+        if api_key:
+            st.sidebar.write(f"✅ Found in environment: {api_key[:10]}...")
+            st.sidebar.write(f"Key length: {len(api_key)} characters")
         else:
             st.sidebar.write("❌ Not found in environment")
             
         st.sidebar.write(f"**Gemini Model Status:** {'✅ Configured' if gemini_model else '❌ Not configured'}")
+        
+        if gemini_model:
+            st.sidebar.success("🎉 Gemini AI is ready to use!")
+        else:
+            st.sidebar.error("❌ Gemini AI configuration failed")
     except Exception as e:
         st.sidebar.write(f"❌ Debug error: {e}")
 
